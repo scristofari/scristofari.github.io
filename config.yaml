@@ -2,6 +2,10 @@ contentdir: "content"
 layoutdir: "layouts"
 publishdir: "public"
 baseurl: "http://scristofari.github.io/"
-title: "Hugo Blog Template for GitHub Pages"
+title: "Sylvain Cristofari"
+description: "Web developer"
 canonifyurls: true
 theme: "hyde"
+
+params:
+  description: "Web developer"
