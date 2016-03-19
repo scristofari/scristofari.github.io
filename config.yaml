@@ -1,11 +1,24 @@
 contentdir: "content"
 layoutdir: "layouts"
 publishdir: "public"
+
 baseurl: "http://scristofari.github.io/"
+
 title: "Sylvain Cristofari"
+author: "Sylvain Cristofari"
+
 description: "Web developer"
 canonifyurls: true
-theme: "hyde"
+theme: "hugo-uno"
+
+taxonomies:
+  category: "categories"
+  tag: "tags"
 
 params:
-  description: "Web developer"
+  AuthorName: "Sylvain"
+  github: "scristofari"
+  twitter: "cristofari_s"
+  email: "mail@fredrikloch.me"
+  description: "Web devloper / Gopher"
+  logo: "https://avatars3.githubusercontent.com/u/3876389?v=3&s=460"

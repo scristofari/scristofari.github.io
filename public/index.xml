@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Sylvain Cristofari</title>
+      <title> on Sylvain Cristofari </title>
+      <generator uri="https://gohugo.io">Hugo</generator>
     <link>http://scristofari.github.io/</link>
-    <description>Recent content on Sylvain Cristofari</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Fri, 18 Mar 2016 18:06:24 +0100</lastBuildDate>
-    <atom:link href="http://scristofari.github.io/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    
+    <updated>Fri, 18 Mar 2016 18:06:24 CET</updated>
     
     <item>
       <title>First post</title>
       <link>http://scristofari.github.io/post/first/</link>
-      <pubDate>Fri, 18 Mar 2016 18:06:24 +0100</pubDate>
+      <pubDate>Fri, 18 Mar 2016 18:06:24 CET</pubDate>
       
       <guid>http://scristofari.github.io/post/first/</guid>
       <description>&lt;p&gt;Building the blog &amp;hellip;. :)&lt;/p&gt;
