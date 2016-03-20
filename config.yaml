@@ -20,5 +20,9 @@ params:
   github: "scristofari"
   twitter: "cristofari_s"
   email: "mail@fredrikloch.me"
-  description: "Web devloper / Gopher"
+  description: "Web developer / Gopher"
   logo: "https://avatars3.githubusercontent.com/u/3876389?v=3&s=460"
+
+blackfriday:
+   plainIDAnchors: true
+   hrefTargetBlank: true
