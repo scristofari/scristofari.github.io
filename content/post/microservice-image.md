@@ -9,13 +9,13 @@ The code is available [here](https://github.com/scristofari/gae-images)
 
 ## Dependency: 
 
-* The router [gorilla mux](https://github.com/gorilla/mux)
-* The [blobstore API](https://cloud.google.com/appengine/docs/go/images/) 
+* [gorilla mux](https://github.com/gorilla/mux) router 
+* [blobstore API](https://cloud.google.com/appengine/docs/go/images/) 
 
-## What the microservice do: 
+## What does the microservice do: 
 
-1. Provide a url for uploading the image ( one-shot ).
-2. You can, after that, upload the image and get the url for rendering it.
+1. Provide an url for uploading images ( one-shot ).
+2. Next you can, upload the image and get the url for it's rendering.
 3. Bonus, with the blobstore api, you can [resize and crop dynamically adding (=sXX/=sXX-c)](https://cloud.google.com/appengine/docs/go/images/#Go_Serving_and_re-sizing_images_from_the_Blobstore)
 at the end of the url
 
@@ -23,8 +23,8 @@ at the end of the url
 
 As simple as possible.
 
-* All the request are sent to the go app.
-* The service will be in 'https'.
+* All the requests are sent to the go app.
+* The service will be served in 'https'.
 
 ``` yaml
 application: "your-app"
@@ -105,7 +105,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-### Rezize - crop the image
+### Rezize - crop the image.
 
-Everything is explained [here](https://cloud.google.com/appengine/docs/go/images/#Go_Serving_and_re-sizing_images_from_the_Blobstorew)
+Everything is explained [here](https://cloud.google.com/appengine/docs/go/images/#Go_Serving_and_re-sizing_images_from_the_Blobstorew).
 
