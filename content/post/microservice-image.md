@@ -1,7 +1,7 @@
 ---
 date: "2016-03-19T18:06:24+01:00"
 draft: false
-title: "A minimalist service for uploading images on GAE in 59 lines"
+title: "A minimalist service for uploading images on GAE"
 tags: [ "Development", "Go", "Google app engine"]
 ---
 
