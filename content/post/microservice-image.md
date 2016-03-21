@@ -105,7 +105,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 }
 ```
 
-### Rezize - crop the image.
+### Resize - crop the image.
 
 Everything is explained [here](https://cloud.google.com/appengine/docs/go/images/#Go_Serving_and_re-sizing_images_from_the_Blobstorew).
 
