@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-    <title> Categories &middot; Sylvain Cristofari </title>
+    <title> A minimalist service for uploading images on GAE in 59 lines &middot; Sylvain Cristofari </title>
     
     <link rel="stylesheet" type="text/css" href="http://scristofari.github.io//css/uno.min.css" />
     <link rel="stylesheet" type="text/css" href="http://scristofari.github.io//css/lightGallery.css" />
@@ -12,14 +12,14 @@
     <link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://scristofari.github.io/apple-touch-icon-144-precomposed.png">
     <link rel="shortcut icon" href="http://scristofari.github.io/favicon.ico">
     
-    <link href="http://scristofari.github.io/categories/index.xml" rel="alternate" type="application/rss+xml" title="Sylvain Cristofari" />
+    <link href="" rel="alternate" type="application/rss+xml" title="Sylvain Cristofari" />
     
     <script src="http://scristofari.github.io//js/jquery.min.js"></script>
     <script src="http://scristofari.github.io//js/main.min.js">
     </script>
 </head>
 
-<body>
+  <body>
     <div id="scriptHeader">
     <span class="mobile btn-mobile-menu">
             <i class="fa fa-bars btn-mobile-menu__icon"></i>
@@ -27,9 +27,7 @@
     </span>
     <header class="
         
-        
             panel-cover panel-cover--collapsed
-        
         " >
     <div class="panel-main">
         <div class="panel-main__inner panel-inverted">
@@ -129,31 +127,146 @@
 </noscript>
 
     <div class="content-wrapper">
-        <div class="content-wrapper__inner">
-            <section id="main">
-              <div>
-                <h1 id="title">Categories</h1>
-                <style type="text/css">
-                        #double ul{
-                          width:760px;
-                          margin-bottom:20px;
-                          overflow:hidden;
-                        }
-                        #double li{
-                          line-height:1.5em;
-                          float:left;
-                          display:inline;
-                          width:50%;
-                        }
-                </style>
-                <ul id="double">
-                
-                
-               </ul>
-              </div>
-            </section>
-            </div>
+      <div class="content-wrapper__inner">
+        <div class="post">
+          <h1>A minimalist service for uploading images on GAE in 59 lines</h1>
+          <span class="post-date">Sat, Mar 19, 2016</span>
+          
+
+<p>The code is available <a href="https://github.com/scristofari/gae-images" target="_blank">here</a></p>
+
+<h2 id="dependency">Dependency:</h2>
+
+<ul>
+<li><a href="https://github.com/gorilla/mux" target="_blank">gorilla mux</a> router</li>
+<li><a href="https://cloud.google.com/appengine/docs/go/images/" target="_blank">blobstore API</a></li>
+</ul>
+
+<h2 id="what-does-the-microservice-do">What does the microservice do:</h2>
+
+<ol>
+<li>Provide an url for uploading images ( one-shot ).</li>
+<li>Next you can, upload the image and get the url for it&rsquo;s rendering.</li>
+<li>Bonus, with the blobstore api, you can <a href="https://cloud.google.com/appengine/docs/go/images/#Go_Serving_and_re-sizing_images_from_the_Blobstore" target="_blank">resize and crop dynamically adding (=sXX/=sXX-c)</a>
+at the end of the url</li>
+</ol>
+
+<h3 id="the-app-yaml">The app.yaml.</h3>
+
+<p>As simple as possible.</p>
+
+<ul>
+<li>All the requests are sent to the go app.</li>
+<li>The service will be served in &lsquo;https&rsquo;.</li>
+</ul>
+
+<pre><code class="language-yaml">application: &quot;your-app&quot;
+version: 1
+runtime: go
+api_version: go1 
+
+handlers:
+- url: /.*
+  script: _go_app          # All the request are sent to the go app.
+  secure: always           # the service will be in 'https'
+</code></pre>
+
+<h3 id="the-app-go">The app.go</h3>
+
+<ul>
+<li>Two routes are provided:</li>
+</ul>
+
+<p>&rdquo;/generate-url&rdquo;, provide a one-shot upload url. (GET)</p>
+
+<p>&rdquo;/upload&rdquo;, the url used by the blobstore to upload the file, and get the image url after that. (POST)</p>
+
+<pre><code class="language-go">func init() {
+  r := mux.NewRouter().StrictSlash(true)
+  r.HandleFunc(&quot;/generate-url&quot;, handleGetUrlForUpload).Methods(&quot;GET&quot;)
+  r.HandleFunc(&quot;/upload&quot;, handleUpload).Methods(&quot;POST&quot;)
+  http.Handle(&quot;/&quot;, r)
+}
+</code></pre>
+
+<ul>
+<li>Get the url for the upload.</li>
+</ul>
+
+<pre><code class="language-go">// Generate the url for the upload - url 'one-shot'
+func handleGetUrlForUpload(w http.ResponseWriter, r *http.Request) {
+  ctx := appengine.NewContext(r)
+  uploadURL, err := blobstore.UploadURL(ctx, &quot;/upload&quot;, nil)
+  if err != nil {
+    log.Errorf(ctx, err.Error())
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
+
+  w.WriteHeader(http.StatusOK)
+  fmt.Fprint(w, uploadURL.String())
+}
+</code></pre>
+
+<ul>
+<li>Handle the upload and provide the url for rendering it.</li>
+</ul>
+
+<p>Get the file on the key = &lsquo;file&rsquo;.</p>
+
+<p>Serve the blob with a secure url.</p>
+
+<pre><code class="language-go">// Upload the file
+func handleUpload(w http.ResponseWriter, r *http.Request) {
+  ctx := appengine.NewContext(r)
+  blobs, _, err := blobstore.ParseUpload(r)
+  if err != nil {
+    log.Errorf(ctx, err.Error())
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
+  file := blobs[&quot;file&quot;]
+  if len(file) == 0 {
+    log.Errorf(ctx, err.Error())
+    http.Error(w, &quot;No file found or url upload not generated&quot;, http.StatusBadRequest)
+    return
+  }
+
+  bkey := file[0].BlobKey
+  url, _ := image.ServingURL(ctx, bkey, &amp;image.ServingURLOptions{
+    Secure: true,
+  })
+
+  w.WriteHeader(http.StatusOK)
+  fmt.Fprint(w, url)
+}
+</code></pre>
+
+<h3 id="resize-crop-the-image">Resize - crop the image.</h3>
+
+<p>Everything is explained <a href="https://cloud.google.com/appengine/docs/go/images/#Go_Serving_and_re-sizing_images_from_the_Blobstorew" target="_blank">here</a>.</p>
+
         </div>
-    </body>
-    
+        <div class="sharing">
+<a href="https://twitter.com/intent/tweet?status=A%20minimalist%20service%20for%20uploading%20images%20on%20GAE%20in%2059%20lines-http%3a%2f%2fscristofari.github.io%2fpost%2fmicroservice-image%2f" target="_blank" title="Follow me on Twitter" class="twitter">
+<span class="fa fa-twitter-square fa-3x"></span></a>
+<a href="https://www.facebook.com/sharer/sharer.php?u=http%3a%2f%2fscristofari.github.io%2fpost%2fmicroservice-image%2f" target="_blank" title="Join me on Facebook" class="facebook">
+<span class="fa fa-facebook-square fa-3x"></span></a>
+<a href="https://plus.google.com/share?url=http%3a%2f%2fscristofari.github.io%2fpost%2fmicroservice-image%2f" target="_blank" title="Google+" class="googleplus">
+<span class="fa fa-google-plus-square fa-3x"></span></a>
+<a href="http://www.linkedin.com/shareArticle?mini=true&url=http%3a%2f%2fscristofari.github.io%2fpost%2fmicroservice-image%2f&title=A%20minimalist%20service%20for%20uploading%20images%20on%20GAE%20in%2059%20lines" target="_blank" title="LinkedIn" class="linkedin">
+<span class="fa fa-linkedin-square fa-3x"></span></a>
+<a href="http://www.reddit.com/submit?url=http%3a%2f%2fscristofari.github.io%2fpost%2fmicroservice-image%2f" target="_blank" title="Reddit" class="reddit"><span class="fa fa-reddit-square fa-3x"></span></a>
+<a href="http://www.stumbleupon.com/submit?url=http%3a%2f%2fscristofari.github.io%2fpost%2fmicroservice-image%2f" target="_blank" title="StumbleUpon" class="stumbleupon"><span class="fa fa-stumbleupon fa-3x">
+</span></a>
+</div>
+        
+
+
+
+      </div>
+    </div>
+
+  </body>
+  
 </html>
