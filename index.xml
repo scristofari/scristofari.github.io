@@ -7,15 +7,128 @@
     
     
     
-    <updated>Fri, 18 Mar 2016 18:06:24 CET</updated>
+    <updated>Sat, 19 Mar 2016 18:06:24 CET</updated>
     
     <item>
-      <title>First post</title>
-      <link>http://scristofari.github.io/post/first/</link>
-      <pubDate>Fri, 18 Mar 2016 18:06:24 CET</pubDate>
+      <title>A minimalist service for uploading images on GAE in 59 lines</title>
+      <link>http://scristofari.github.io/post/microservice-image/</link>
+      <pubDate>Sat, 19 Mar 2016 18:06:24 CET</pubDate>
       
-      <guid>http://scristofari.github.io/post/first/</guid>
-      <description>&lt;p&gt;Building the blog &amp;hellip;. :)&lt;/p&gt;
+      <guid>http://scristofari.github.io/post/microservice-image/</guid>
+      <description>
+
+&lt;p&gt;The code is available &lt;a href=&#34;https://github.com/scristofari/gae-images&#34; target=&#34;_blank&#34;&gt;here&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;dependency&#34;&gt;Dependency:&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/gorilla/mux&#34; target=&#34;_blank&#34;&gt;gorilla mux&lt;/a&gt; router&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://cloud.google.com/appengine/docs/go/images/&#34; target=&#34;_blank&#34;&gt;blobstore API&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;what-does-the-microservice-do&#34;&gt;What does the microservice do:&lt;/h2&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Provide an url for uploading images ( one-shot ).&lt;/li&gt;
+&lt;li&gt;Next you can, upload the image and get the url for it&amp;rsquo;s rendering.&lt;/li&gt;
+&lt;li&gt;Bonus, with the blobstore api, you can &lt;a href=&#34;https://cloud.google.com/appengine/docs/go/images/#Go_Serving_and_re-sizing_images_from_the_Blobstore&#34; target=&#34;_blank&#34;&gt;resize and crop dynamically adding (=sXX/=sXX-c)&lt;/a&gt;
+at the end of the url&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&#34;the-app-yaml&#34;&gt;The app.yaml.&lt;/h3&gt;
+
+&lt;p&gt;As simple as possible.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;All the requests are sent to the go app.&lt;/li&gt;
+&lt;li&gt;The service will be served in &amp;lsquo;https&amp;rsquo;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-yaml&#34;&gt;application: &amp;quot;your-app&amp;quot;
+version: 1
+runtime: go
+api_version: go1 
+
+handlers:
+- url: /.*
+  script: _go_app          # All the request are sent to the go app.
+  secure: always           # the service will be in &#39;https&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;the-app-go&#34;&gt;The app.go&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Two routes are provided:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&amp;rdquo;/generate-url&amp;rdquo;, provide a one-shot upload url. (GET)&lt;/p&gt;
+
+&lt;p&gt;&amp;rdquo;/upload&amp;rdquo;, the url used by the blobstore to upload the file, and get the image url after that. (POST)&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func init() {
+  r := mux.NewRouter().StrictSlash(true)
+  r.HandleFunc(&amp;quot;/generate-url&amp;quot;, handleGetUrlForUpload).Methods(&amp;quot;GET&amp;quot;)
+  r.HandleFunc(&amp;quot;/upload&amp;quot;, handleUpload).Methods(&amp;quot;POST&amp;quot;)
+  http.Handle(&amp;quot;/&amp;quot;, r)
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Get the url for the upload.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// Generate the url for the upload - url &#39;one-shot&#39;
+func handleGetUrlForUpload(w http.ResponseWriter, r *http.Request) {
+  ctx := appengine.NewContext(r)
+  uploadURL, err := blobstore.UploadURL(ctx, &amp;quot;/upload&amp;quot;, nil)
+  if err != nil {
+    log.Errorf(ctx, err.Error())
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
+
+  w.WriteHeader(http.StatusOK)
+  fmt.Fprint(w, uploadURL.String())
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Handle the upload and provide the url for rendering it.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Get the file on the key = &amp;lsquo;file&amp;rsquo;.&lt;/p&gt;
+
+&lt;p&gt;Serve the blob with a secure url.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;// Upload the file
+func handleUpload(w http.ResponseWriter, r *http.Request) {
+  ctx := appengine.NewContext(r)
+  blobs, _, err := blobstore.ParseUpload(r)
+  if err != nil {
+    log.Errorf(ctx, err.Error())
+    http.Error(w, err.Error(), http.StatusInternalServerError)
+    return
+  }
+  file := blobs[&amp;quot;file&amp;quot;]
+  if len(file) == 0 {
+    log.Errorf(ctx, err.Error())
+    http.Error(w, &amp;quot;No file found or url upload not generated&amp;quot;, http.StatusBadRequest)
+    return
+  }
+
+  bkey := file[0].BlobKey
+  url, _ := image.ServingURL(ctx, bkey, &amp;amp;image.ServingURLOptions{
+    Secure: true,
+  })
+
+  w.WriteHeader(http.StatusOK)
+  fmt.Fprint(w, url)
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;resize-crop-the-image&#34;&gt;Resize - crop the image.&lt;/h3&gt;
+
+&lt;p&gt;Everything is explained &lt;a href=&#34;https://cloud.google.com/appengine/docs/go/images/#Go_Serving_and_re-sizing_images_from_the_Blobstorew&#34; target=&#34;_blank&#34;&gt;here&lt;/a&gt;.&lt;/p&gt;
 </description>
     </item>
     
