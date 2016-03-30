@@ -27,3 +27,5 @@ params:
 blackfriday:
    plainIDAnchors: true
    hrefTargetBlank: true
+
+# git push origin `git subtree split --prefix=public hugo`:master --force
